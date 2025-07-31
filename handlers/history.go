@@ -1,8 +1,8 @@
 package handlers
 
 type History struct {
-	history      []string // History of executed queries
-	historyindex int      // Current index in the history
+	history      []string
+	historyindex int
 }
 
 func (h *History) GetPreviousQuery() string {
@@ -17,9 +17,9 @@ func (h *History) GetPreviousQuery() string {
 func (h *History) GetNextQuery() string {
 	if h.historyindex <= len(h.history)-1 {
 		h.historyindex++
-		if(h.historyindex>= len(h.history)) {
-			h.historyindex = len(h.history) - 1 // Reset to last query if out of bounds
-			return "" // Prevent going out of bounds
+		if h.historyindex >= len(h.history) {
+			h.historyindex = len(h.history) - 1
+			return ""
 		}
 		query := h.history[h.historyindex]
 		return query

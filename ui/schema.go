@@ -18,15 +18,14 @@ func GetSchemaExplorer(conn *pgx.Conn, queryInput *tview.InputField) (*tview.Lis
 		for rows.Next() {
 			var tableName string
 			_ = rows.Scan(&tableName)
-			// Add item without callback in the AddItem call
+
 			list.AddItem(tableName, "", 0, nil)
 		}
 	}
 	refresh()
 
-	// Set up the selection handler separately
 	list.SetSelectedFunc(func(index int, mainText, secondaryText string, shortcut rune) {
-		// mainText contains the table name
+
 		queryInput.SetText("SELECT * FROM " + mainText + ";")
 	})
 

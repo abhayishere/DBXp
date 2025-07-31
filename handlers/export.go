@@ -9,13 +9,13 @@ import (
 )
 
 type Export struct {
-	columns []string   // Column headers
-	rows    [][]string // All the row data
+	columns []string
+	rows    [][]string
 }
 
 func (e *Export) AddRow(row []any) {
 	if len(row) != len(e.columns) {
-		return // Ensure row matches column count
+		return
 	}
 	strValues := make([]string, len(row))
 	for i, v := range row {
@@ -25,12 +25,12 @@ func (e *Export) AddRow(row []any) {
 			strValues[i] = "NULL"
 		}
 	}
-	e.rows = append(e.rows, strValues) // Store row data for export
+	e.rows = append(e.rows, strValues)
 }
 
 func (e *Export) AddColumns(columns []pgconn.FieldDescription) {
 	if len(columns) == 0 {
-		return // No columns to add
+		return
 	}
 
 	e.rows = nil
@@ -49,7 +49,7 @@ func (e *Export) ExportToCSV() error {
 
 	writer := csv.NewWriter(file)
 
-	err = writer.Write(e.columns) // Write header
+	err = writer.Write(e.columns)
 	if err != nil {
 		return fmt.Errorf("error writing header to CSV: %w", err)
 	}
