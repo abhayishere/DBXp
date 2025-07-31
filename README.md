@@ -202,3 +202,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Happy Database Exploring!** 🚀
+
+
+CREATE TABLE products (id SERIAL PRIMARY KEY,name VARCHAR(100) NOT NULL,price DECIMAL(10,2),category VARCHAR(50),created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+
+INSERT INTO products (name, price, category) VALUES('Laptop', 999.99, 'Electronics'),('Coffee Mug', 12.50, 'Kitchen'),('Notebook', 5.99, 'Office'),('Headphones', 79.99, 'Electronics'),('Desk Chair', 199.99, 'Furniture');
