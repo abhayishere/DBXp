@@ -1,0 +1,6 @@
+id,name,price,category,created_at
+1,Laptop,{99999 -2 false finite true},Electronics,2025-07-30 14:15:21.155007 +0000 UTC
+2,Coffee Mug,{1250 -2 false finite true},Kitchen,2025-07-30 14:15:21.155007 +0000 UTC
+3,Notebook,{599 -2 false finite true},Office,2025-07-30 14:15:21.155007 +0000 UTC
+4,Headphones,{7999 -2 false finite true},Electronics,2025-07-30 14:15:21.155007 +0000 UTC
+5,Desk Chair,{19999 -2 false finite true},Furniture,2025-07-30 14:15:21.155007 +0000 UTC
