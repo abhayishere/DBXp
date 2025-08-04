@@ -1,27 +1,71 @@
 package ui
 
 import (
+	"fmt"
+
+	"github.com/abhayishere/DBXp/connection"
 	"github.com/abhayishere/DBXp/db"
 	"github.com/rivo/tview"
 )
 
 func NewConnectionSelector(app *tview.Application, onConnect func(db.DatabaseConfig)) {
+	logo := tview.NewTextView()
+	logo.SetText(`
+ ██████╗ ██████╗ ██╗  ██╗██████╗ 
+ ██╔══██╗██╔══██╗╚██╗██╔╝██╔══██╗
+ ██║  ██║██████╔╝ ╚███╔╝ ██████╔╝
+ ██║  ██║██╔══██╗ ██╔██╗ ██╔═══╝ 
+ ██████╔╝██████╔╝██╔╝ ██╗██║     
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝     
+                                 
+     Database Explorer Tool      
+`).
+		SetTextAlign(tview.AlignCenter).
+		SetDynamicColors(true).
+		SetBorder(false)
 	list := tview.NewList()
 	list.SetBorder(true).SetTitle("Select Connection")
-	list.AddItem("Manual Connection", "Configure a connection manually", 1, func() {
+	list.AddItem("[1] Manual connection setup ⚙️", "", 0, func() {
 		manualForm := NewManualConnectionForm(app, list, onConnect)
 		app.SetRoot(manualForm, true)
 	})
-	list.AddItem("Saved Connections", "Select from saved connections", 1, func() {
+	list.AddItem("[2] Saved Connections", "", 0, func() {
 		app.SetRoot(tview.NewTextView().SetText("Saved connections not implemented yet"), true)
 	})
-	list.AddItem("Set connection using env", "Update the env file in the dir", 1, func() {
+	list.AddItem("[3] Auto-detect local containers 🐳", "", 0, func() {
+		list, err := connection.DetectDatabases(onConnect)
+		if err != nil {
+			app.SetRoot(tview.NewTextView().SetText("Detection from docker not implemented yet"), true)
+		}
+		if len(list) == 0 {
+			app.SetRoot(tview.NewTextView().SetText("No databases detected"), true)
+			return
+		}
+		listOfDbs := tview.NewList()
+		listOfDbs.SetBorder(true).SetTitle("Detected Databases")
+		for _, config := range list {
+			listOfDbs.AddItem(fmt.Sprintf("%s of %s:%s", config.Type, config.Database, config.Port), "", 0, func() {
+				onConnect(config)
+			})
+		}
+		app.SetRoot(listOfDbs, true)
+	})
+	list.AddItem("[4] Set connection using env", "", 0, func() {
 		app.SetRoot(tview.NewTextView().SetText("Set connection using env not implemented yet"), true)
 	})
-	list.AddItem("Exit", "Exit the connection selector", 1, func() {
+	list.AddItem("[5] Exit", "", 0, func() {
 		app.Stop()
 	})
-	app.SetRoot(list, true)
+	bottomBar := tview.NewTextView()
+
+	bottomBar.SetText("[yellow][ ↑↓ ][white] navigate  [yellow][ enter ][white] select  [yellow][ esc ][white] back  [yellow][ ctrl+c ][white] exit").SetDynamicColors(true)
+	layout := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(logo, 10, 0, false). // Logo takes 10 lines, fixed height
+		AddItem(list, 0, 1, true).   // List takes remaining space
+		AddItem(bottomBar, 1, 0, false)
+
+	app.SetRoot(layout, true)
 }
 
 func NewManualConnectionForm(app *tview.Application, list *tview.List, onConnect func(db.DatabaseConfig)) *tview.Form {
