@@ -4,12 +4,14 @@ go 1.24.1
 
 require (
 	github.com/gdamore/tcell/v2 v2.8.1
+	github.com/go-sql-driver/mysql v1.9.3
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/rivo/tview v0.0.0-20250625164341-a4a78f1e05cb
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

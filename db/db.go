@@ -11,6 +11,8 @@ type Database interface {
 	ExecuteQuery(sql string) (QueryResult, error)
 	// GetTables retrieves a list of tables in the database.
 	ExecuteNonSelectQuery(sql string) (int64, error)
+
+	ListTables() ([]string, error)
 }
 
 func NewDatabase(dbConfig DatabaseConfig) (Database, error) {

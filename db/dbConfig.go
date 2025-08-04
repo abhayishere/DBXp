@@ -7,7 +7,7 @@ import (
 )
 
 type DatabaseConfig struct {
-	Type     string // "postgres", "mysql", "sqlite"
+	Type     string
 	Host     string
 	Port     string
 	Database string

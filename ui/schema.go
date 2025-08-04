@@ -11,11 +11,10 @@ func GetSchemaExplorer(db db.Database, queryInput *tview.InputField) (*tview.Lis
 	list := tview.NewList().ShowSecondaryText(false)
 	refresh := func() {
 		list.Clear()
-		queryResult, _ := db.ExecuteQuery("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-		tableList := queryResult.Rows
+		tableList, _ := db.ListTables()
 		for _, table_name := range tableList {
-			queryResult, _ := db.ExecuteQuery(fmt.Sprintf("SELECT COUNT(*) FROM %s", table_name[0]))
-			list.AddItem(fmt.Sprintf("%s(%s)", table_name[0], queryResult.Rows[0][0]), "", 0, nil)
+			queryResult, _ := db.ExecuteQuery(fmt.Sprintf("SELECT COUNT(*) FROM %s", table_name))
+			list.AddItem(fmt.Sprintf("%s(%s)", table_name, queryResult.Rows[0][0]), "", 0, nil)
 		}
 	}
 	refresh()

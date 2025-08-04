@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -61,7 +62,27 @@ func (p *PostgreSQLDB) ExecuteQuery(sql string) (QueryResult, error) {
 func (p *PostgreSQLDB) ExecuteNonSelectQuery(sql string) (int64, error) {
 	_, err := p.conn.Exec(context.Background(), sql)
 	if err != nil {
-		return 0, err
+		return 0, errors.New("Error executing non-select query: " + err.Error())
 	}
 	return 0, nil // Non-select queries don't return rows
+}
+
+func (p *PostgreSQLDB) ListTables() ([]string, error) {
+	sql := "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
+	rows, err := p.conn.Query(context.Background(), sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			return nil, err
+		}
+		tables = append(tables, tableName)
+	}
+
+	return tables, nil
 }
