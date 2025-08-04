@@ -4,8 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type Export struct {
@@ -13,22 +11,14 @@ type Export struct {
 	rows    [][]string
 }
 
-func (e *Export) AddRow(row []any) {
+func (e *Export) AddRow(row []string) {
 	if len(row) != len(e.columns) {
 		return
 	}
-	strValues := make([]string, len(row))
-	for i, v := range row {
-		if v != nil {
-			strValues[i] = fmt.Sprintf("%v", v)
-		} else {
-			strValues[i] = "NULL"
-		}
-	}
-	e.rows = append(e.rows, strValues)
+	e.rows = append(e.rows, row)
 }
 
-func (e *Export) AddColumns(columns []pgconn.FieldDescription) {
+func (e *Export) AddColumns(columns []string) {
 	if len(columns) == 0 {
 		return
 	}
@@ -36,7 +26,7 @@ func (e *Export) AddColumns(columns []pgconn.FieldDescription) {
 	e.rows = nil
 	e.columns = nil
 	for _, col := range columns {
-		e.columns = append(e.columns, col.Name)
+		e.columns = append(e.columns, col)
 	}
 }
 

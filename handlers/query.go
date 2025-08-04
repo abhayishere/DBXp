@@ -1,25 +1,24 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/abhayishere/DBXp/db"
 	"github.com/rivo/tview"
 )
 
 type QueryHandler struct {
-	conn      *pgx.Conn
+	db        db.Database
 	resultBox *tview.TextView
 	refresh   func()
 	history   *History
 	export    *Export
 }
 
-func NewQueryHandler(conn *pgx.Conn, resultBox *tview.TextView, refreshFunc func()) *QueryHandler {
+func NewQueryHandler(db db.Database, resultBox *tview.TextView, refreshFunc func()) *QueryHandler {
 	return &QueryHandler{
-		conn:      conn,
+		db:        db,
 		resultBox: resultBox,
 		refresh:   refreshFunc,
 		history: &History{
@@ -33,36 +32,35 @@ func NewQueryHandler(conn *pgx.Conn, resultBox *tview.TextView, refreshFunc func
 	}
 }
 
-func (qh *QueryHandler) ExecuteQuery(sql string) {
+func (qh *QueryHandler) ExecuteQuery(sql string) error {
 	sqlUpper := strings.ToUpper(strings.TrimSpace(sql))
 	if len(sqlUpper) != 0 {
 		qh.history.history = append(qh.history.history, sqlUpper)
 		qh.history.historyindex++
 	}
 	if strings.HasPrefix(sqlUpper, "SELECT") {
-		qh.executeSelectQuery(sql)
+		return qh.executeSelectQuery(sql)
 	} else {
-		qh.executeNonSelectQuery(sql, sqlUpper)
+		return qh.executeNonSelectQuery(sql, sqlUpper)
 	}
 }
 
-func (qh *QueryHandler) executeSelectQuery(sql string) {
-	rows, err := qh.conn.Query(context.Background(), sql)
+func (qh *QueryHandler) executeSelectQuery(sql string) error {
+	queryResult, err := qh.db.ExecuteQuery(sql)
 	if err != nil {
 		qh.resultBox.SetText("Error: " + err.Error())
-		return
+		return err
 	}
-	defer rows.Close()
-
-	output := qh.formatQueryResults(rows)
+	output := qh.formatQueryResults(queryResult)
 	qh.resultBox.SetText(output)
+	return nil
 }
 
-func (qh *QueryHandler) executeNonSelectQuery(sql, sqlUpper string) {
-	_, err := qh.conn.Exec(context.Background(), sql)
+func (qh *QueryHandler) executeNonSelectQuery(sql, sqlUpper string) error {
+	_, err := qh.db.ExecuteNonSelectQuery(sql)
 	if err != nil {
 		qh.resultBox.SetText("Error: " + err.Error())
-		return
+		return err
 	}
 
 	qh.resultBox.SetText("Query executed successfully")
@@ -70,31 +68,30 @@ func (qh *QueryHandler) executeNonSelectQuery(sql, sqlUpper string) {
 	if qh.shouldRefreshSchema(sqlUpper) {
 		qh.refresh()
 	}
+	return nil
 }
 
-func (qh *QueryHandler) formatQueryResults(rows pgx.Rows) string {
+func (qh *QueryHandler) formatQueryResults(data db.QueryResult) string {
 	var output string
 
-	fields := rows.FieldDescriptions()
+	fields := data.Columns
 	qh.export.AddColumns(fields)
 	for _, f := range fields {
-		output += f.Name + "\t"
+		output += f + "\t"
 	}
 	output += "\n"
 
-	for rows.Next() {
-		values, _ := rows.Values()
-		for _, v := range values {
-			if v != nil {
-				output += fmt.Sprintf("%v", v) + "\t"
+	for _, row := range data.Rows {
+		for _, value := range row {
+			if value != "NULL" && value != "" {
+				output += fmt.Sprintf("%v", value) + "\t"
 			} else {
 				output += "NULL\t"
 			}
 		}
 		output += "\n"
-		qh.export.AddRow(values)
+		qh.export.AddRow(row)
 	}
-
 	return output
 }
 

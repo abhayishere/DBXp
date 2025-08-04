@@ -1,44 +1,52 @@
 package app
 
 import (
-	"context"
-
 	"github.com/abhayishere/DBXp/db"
 	"github.com/abhayishere/DBXp/handlers"
 	"github.com/abhayishere/DBXp/ui"
 	"github.com/gdamore/tcell/v2"
-	"github.com/jackc/pgx/v5"
 	"github.com/rivo/tview"
 )
 
 type App struct {
 	tviewApp *tview.Application
-	conn     *pgx.Conn
 }
 
 func New() (*App, error) {
-	conn, err := db.Connect()
-	if err != nil {
-		return nil, err
-	}
-
 	return &App{
 		tviewApp: tview.NewApplication(),
-		conn:     conn,
 	}, nil
 }
 
+func (a *App) showConnectionSelector(onConnected func(db.Database)) (db.DatabaseConfig, error) {
+	ui.NewConnectionSelector(a.tviewApp, func(dbConfig db.DatabaseConfig) {
+		dbInstance, err := db.NewDatabase(dbConfig)
+		if err != nil {
+			a.tviewApp.SetRoot(tview.NewTextView().SetText("Failed to connect: "+err.Error()), true)
+			return
+		}
+		onConnected(dbInstance)
+	})
+	return db.DatabaseConfig{}, nil
+}
 func (a *App) Run() error {
-	defer a.conn.Close(context.Background())
+	_, err := a.showConnectionSelector(func(dbInstance db.Database) {
+		a.showMainUILayout(dbInstance)
+	})
+	if err != nil {
+		return err
+	}
+	return a.tviewApp.Run()
+}
 
+func (a *App) showMainUILayout(dbInstance db.Database) {
 	resultBox := tview.NewTextView()
 	resultBox.SetBorder(true).SetTitle("Results")
 
 	queryInput := tview.NewInputField().SetLabel("SQL > ")
-
-	schemaList, refreshSchema := ui.GetSchemaExplorer(a.conn, queryInput)
-
-	queryHandler := handlers.NewQueryHandler(a.conn, resultBox, refreshSchema)
+	dbInstance.Connect()
+	schemaList, refreshSchema := ui.GetSchemaExplorer(dbInstance, queryInput)
+	queryHandler := handlers.NewQueryHandler(dbInstance, resultBox, refreshSchema)
 
 	eventHandler := handlers.NewEventHandler(queryHandler)
 	eventHandler.SetupQueryInputHandler(queryInput)
@@ -60,6 +68,5 @@ func (a *App) Run() error {
 	layout := ui.BuildUILayout(schemaList, queryInput, resultBox)
 
 	a.tviewApp.SetFocus(queryInput)
-
-	return a.tviewApp.SetRoot(layout, true).Run()
+	a.tviewApp.SetRoot(layout, true).SetFocus(queryInput)
 }

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -20,7 +22,12 @@ func (eh *EventHandler) SetupQueryInputHandler(queryInput *tview.InputField) {
 		if key == tcell.KeyEnter {
 			sql := queryInput.GetText()
 			if sql != "" {
-				eh.queryHandler.ExecuteQuery(sql)
+				start := time.Now()
+				err := eh.queryHandler.ExecuteQuery(sql)
+				elapsed := time.Since(start)
+				if err == nil {
+					eh.queryHandler.resultBox.SetText(eh.queryHandler.resultBox.GetText(true) + "\nQuery executed in " + elapsed.String())
+				}
 				queryInput.SetText("")
 			}
 		}

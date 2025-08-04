@@ -1,8 +1,11 @@
 package ui
 
-import "github.com/rivo/tview"
+import (
+	"github.com/rivo/tview"
+)
 
 func BuildUILayout(schemaList *tview.List, queryInput *tview.InputField, resultBox *tview.TextView) *tview.Flex {
+
 	mainContent := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(resultBox, 0, 4, false).
 		AddItem(queryInput, 3, 1, false)

@@ -1,35 +1,21 @@
 package ui
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/abhayishere/DBXp/db"
 	"github.com/rivo/tview"
 )
 
-func GetSchemaExplorer(conn *pgx.Conn, queryInput *tview.InputField) (*tview.List, func()) {
+func GetSchemaExplorer(db db.Database, queryInput *tview.InputField) (*tview.List, func()) {
 	list := tview.NewList().ShowSecondaryText(false)
-
 	refresh := func() {
-		tableList := []string{}
 		list.Clear()
-		rows, _ := conn.Query(context.Background(), "SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-		defer rows.Close()
-		for rows.Next() {
-			var tableName string
-			_ = rows.Scan(&tableName)
-			tableList = append(tableList, tableName)
-		}
-		rows.Close()
+		queryResult, _ := db.ExecuteQuery("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+		tableList := queryResult.Rows
 		for _, table_name := range tableList {
-			rows, _ := conn.Query(context.Background(), fmt.Sprintf("SELECT COUNT(*) FROM %s", table_name))
-			defer rows.Close()
-			var count int64
-			if rows.Next() {
-				_ = rows.Scan(&count)
-			}
-			list.AddItem(fmt.Sprintf("%s(%d)", table_name, count), "", 0, nil)
+			queryResult, _ := db.ExecuteQuery(fmt.Sprintf("SELECT COUNT(*) FROM %s", table_name[0]))
+			list.AddItem(fmt.Sprintf("%s(%s)", table_name[0], queryResult.Rows[0][0]), "", 0, nil)
 		}
 	}
 	refresh()
