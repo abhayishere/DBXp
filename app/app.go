@@ -1,9 +1,11 @@
 package app
 
 import (
+	"github.com/abhayishere/DBXp/contants"
 	"github.com/abhayishere/DBXp/db"
 	"github.com/abhayishere/DBXp/handlers"
 	"github.com/abhayishere/DBXp/ui"
+	"github.com/abhayishere/DBXp/utils"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -44,13 +46,13 @@ func (a *App) showMainUILayout(dbInstance db.Database) {
 	resultBox.SetBorder(true).SetTitle("Results")
 
 	queryInput := tview.NewInputField().SetLabel("SQL > ")
+	queryInput.SetBorder(true)
 	dbInstance.Connect()
 	schemaList, refreshSchema := ui.GetSchemaExplorer(dbInstance, queryInput)
 	queryHandler := handlers.NewQueryHandler(dbInstance, resultBox, refreshSchema)
 
 	eventHandler := handlers.NewEventHandler(queryHandler)
 	eventHandler.SetupQueryInputHandler(queryInput)
-
 	a.tviewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
@@ -68,5 +70,8 @@ func (a *App) showMainUILayout(dbInstance db.Database) {
 	layout := ui.BuildUILayout(schemaList, queryInput, resultBox)
 
 	a.tviewApp.SetFocus(queryInput)
-	a.tviewApp.SetRoot(layout, true).SetFocus(queryInput)
+	maincontent := ui.CreateLayoutWithHotKeys(tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(utils.GetLogo(), 10, 0, false).
+		AddItem(layout, 0, 1, true), contants.MainHotkeys)
+	a.tviewApp.SetRoot(maincontent, true).SetFocus(queryInput)
 }

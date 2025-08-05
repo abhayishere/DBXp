@@ -27,12 +27,12 @@ func DetectDatabases(onConnect func(db.DatabaseConfig)) ([]db.DatabaseConfig, er
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to create Docker client: %w", err)
 	}
 	defer cli.Close()
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 
 	detected := []db.DatabaseConfig{}

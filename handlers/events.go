@@ -49,6 +49,10 @@ func (eh *EventHandler) SetupQueryInputHandler(queryInput *tview.InputField) {
 				queryInput.SetText("Exported to export.csv")
 			}
 			return nil
+		} else if key.Key() == tcell.KeyF5 {
+			eh.queryHandler.refresh()
+			eh.queryHandler.resultBox.SetText("Schema explorer refreshed")
+			return nil
 		}
 		return key
 	})
