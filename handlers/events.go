@@ -53,6 +53,14 @@ func (eh *EventHandler) SetupQueryInputHandler(queryInput *tview.InputField) {
 			eh.queryHandler.refresh()
 			eh.queryHandler.resultBox.SetText("Schema explorer refreshed")
 			return nil
+		} else if key.Key() == tcell.KeyCtrlL {
+			eh.queryHandler.livePreview = !eh.queryHandler.livePreview
+			if eh.queryHandler.livePreview {
+				eh.queryHandler.resultBox.SetTitle("Results [LIVE PREVIEW Enabled]")
+			} else {
+				eh.queryHandler.resultBox.SetTitle("Results")
+			}
+			return nil
 		}
 		return key
 	})

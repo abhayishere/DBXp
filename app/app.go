@@ -1,6 +1,8 @@
 package app
 
 import (
+	"time"
+
 	"github.com/abhayishere/DBXp/contants"
 	"github.com/abhayishere/DBXp/db"
 	"github.com/abhayishere/DBXp/handlers"
@@ -53,6 +55,19 @@ func (a *App) showMainUILayout(dbInstance db.Database) {
 
 	eventHandler := handlers.NewEventHandler(queryHandler)
 	eventHandler.SetupQueryInputHandler(queryInput)
+
+	queryInput.SetChangedFunc(func(text string) {
+		if queryHandler.DebounceTimer != nil {
+			queryHandler.DebounceTimer.Stop()
+		}
+		if queryHandler.IsLivePreviewEnabled() && text != "" {
+			queryHandler.DebounceTimer = time.AfterFunc(500*time.Millisecond, func() {
+				a.tviewApp.QueueUpdateDraw(func() {
+					queryHandler.ShowLivePreview(text)
+				})
+			})
+		}
+	})
 	a.tviewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:

@@ -3,17 +3,20 @@ package handlers
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/abhayishere/DBXp/db"
 	"github.com/rivo/tview"
 )
 
 type QueryHandler struct {
-	db        db.Database
-	resultBox *tview.TextView
-	refresh   func()
-	history   *History
-	export    *Export
+	db          db.Database
+	resultBox   *tview.TextView
+	refresh     func()
+	history     *History
+	export      *Export
+	livePreview bool
+	DebounceTimer *time.Timer
 }
 
 func NewQueryHandler(db db.Database, resultBox *tview.TextView, refreshFunc func()) *QueryHandler {
@@ -29,6 +32,8 @@ func NewQueryHandler(db db.Database, resultBox *tview.TextView, refreshFunc func
 			columns: []string{},
 			rows:    [][]string{},
 		},
+		livePreview: false, // Default to false, can be toggled later
+		DebounceTimer: nil, // Initialize debounce timer
 	}
 }
 
@@ -52,7 +57,13 @@ func (qh *QueryHandler) executeSelectQuery(sql string) error {
 		return err
 	}
 	output := qh.formatQueryResults(queryResult)
-	qh.resultBox.SetText(output)
+	if qh.IsLivePreviewEnabled() {
+		if err == nil {
+			qh.resultBox.SetText("[LIVE PREVIEW]\n" + output)
+		}
+	} else {
+		qh.resultBox.SetText(output)
+	}
 	return nil
 }
 
@@ -103,4 +114,34 @@ func (qh *QueryHandler) shouldRefreshSchema(sqlUpper string) bool {
 		}
 	}
 	return false
+}
+
+func (qh *QueryHandler) IsLivePreviewEnabled() bool {
+	return qh.livePreview
+}
+func (qh *QueryHandler) ShowLivePreview(query string) {
+	if qh.IsSafeSelect(query) {
+		start := time.Now()
+		err := qh.ExecuteQuery(query)
+		elapsed := time.Since(start)
+		if err == nil {
+			qh.resultBox.SetText(qh.resultBox.GetText(true) + "\nQuery executed in " + elapsed.String())
+		}
+	} else {
+		qh.resultBox.SetText("Live preview only supports SELECT queries.")
+	}
+}
+
+func (qh *QueryHandler) IsSafeSelect(query string) bool {
+	sqlUpper := strings.ToUpper(strings.TrimSpace(query))
+	if !strings.HasPrefix(sqlUpper, "SELECT") {
+		return false
+	}
+	unsafeKeywords := []string{"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE"}
+	for _, keyword := range unsafeKeywords {
+		if strings.Contains(sqlUpper, keyword) {
+			return false
+		}
+	}
+	return true
 }
