@@ -1,16 +1,16 @@
 # DBXp - Database Explorer Tool
 
 A terminal-based database explorer written in Go that provides an intuitive TUI (Terminal User Interface) for managing and querying databases.
-![alt text](image.png)
+![alt text](/media/image.png)
 
 
-![alt text](image-1.png)
+![alt text](/media/image-1.png)
 
 
-![alt text](image-2.png)
+![alt text](/media/image-2.png)
 
 
-![alt text](image-3.png)
+![alt text](/media/image-3.png)
 
 ## 🌟 Features
 
